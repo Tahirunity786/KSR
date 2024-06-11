@@ -63,7 +63,7 @@ class TutorUserSerializer(serializers.ModelSerializer):
     reviews = ReviewsSerializer(many = True)
     class Meta:
         model = User
-        fields = ['profile', 'first_name', 'last_name', 'email', 'hourly_rate', 'Response_time', 't_to_numver_of_students', 'reviews']
+        fields = ['profile', 'first_name', 'last_name', 'email', 'hourly_rate', 'response_time', 't_to_number_of_students', 'reviews']
 
 
 
