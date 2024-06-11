@@ -26,11 +26,12 @@ class LanguagesSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class JobSerializer(serializers.ModelSerializer):
-    tutor = TutorUserSerializer()
+    tutor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
     class Meta:
         model = Job
-        fields = ('id', 'tutor', 'job_title', 'about_tutor', 'job_about', 'job_location', 'job_lang', 'job_subjects', 'publish', 'tutor')
-    
+        fields = ('id', 'tutor', 'job_title', 'about_tutor', 'job_about', 'job_location', 'job_lang', 'job_subjects', 'publish')
+
     def create(self, validated_data):
         job_subjects_data = validated_data.pop('job_subjects', [])
         job_lang_data = validated_data.pop('job_lang', [])
@@ -67,7 +68,12 @@ class JobSerializer(serializers.ModelSerializer):
         return instance
 
 
+class JoblistSerializer(serializers.ModelSerializer):
+    tutor = TutorUserSerializer()
 
+    class Meta:
+        model = Job
+        fields = ('id', 'tutor', 'job_title', 'about_tutor', 'job_about', 'job_location', 'job_lang', 'job_subjects', 'publish')
 
 
 class JobDetailSerializer(serializers.ModelSerializer):

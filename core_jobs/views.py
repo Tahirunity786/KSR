@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Job, Language, Subject
-from .serializers import JobDetailSerializer, JobSerializer, SubjectsSerializer, LanguagesSerializer
+from .serializers import JobDetailSerializer, JobSerializer, JoblistSerializer, SubjectsSerializer, LanguagesSerializer
 from django.db.models import Q
 import logging
 logger = logging.getLogger(__name__)
@@ -115,17 +115,16 @@ class DeleteLanguage(generics.DestroyAPIView):
 
 class Listjobs(generics.ListAPIView):
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
+    serializer_class = JoblistSerializer
     permission_classes = [IsAuthenticated]
 
 class SearchJobs(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, data_a, data_b):
         try:
-            data_a = request.GET.get("subject", "")
-            data_b = request.GET.get("location", "")
+          
 
             # Debugging: Check the input values
             # logger.debug(f"Subject: {data_a}, Location: {data_b}")
@@ -143,7 +142,7 @@ class SearchJobs(APIView):
             # logger.debug(f"SQL Query: {str(jobs.query)}")
             # logger.debug(f"Jobs found: {jobs.count()}")
 
-            serializers = JobSerializer(instance=jobs, many=True)
+            serializers = JoblistSerializer(instance=jobs, many=True)
             
             return Response(data=serializers.data, status=status.HTTP_200_OK)
 

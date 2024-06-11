@@ -9,7 +9,7 @@ urlpatterns = [
     path('add/language', AddLanguages.as_view()),
     path('delete/<int:id>/language', DeleteLanguage.as_view()),
     path('list/', Listjobs.as_view()),
-    path('search/', SearchJobs.as_view()),
+    path('search/<str:data_a>/<str:data_b>/', SearchJobs.as_view()),
     path('list/language', ListLanguage.as_view()),
     path('<int:pk>/update/', JobDetailView.as_view(),),
     path('<int:pk>/delete/', JobDetailView.as_view(),),
