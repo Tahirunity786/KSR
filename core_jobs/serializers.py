@@ -8,6 +8,13 @@ from .models import Subject, Language, Job
 
 User = get_user_model()
 
+class TutorUserSerializer(serializers.ModelSerializer):
+    reviews = ReviewsSerializer(many = True)
+    class Meta:
+        model = User
+        fields = ['profile', 'first_name', 'last_name', 'email', 'hourly_rate', 'response_time', 't_to_number_of_students', 'reviews']
+
+
 class SubjectsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -19,6 +26,7 @@ class LanguagesSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class JobSerializer(serializers.ModelSerializer):
+    tutor = TutorUserSerializer()
     class Meta:
         model = Job
         fields = ('id', 'tutor', 'job_title', 'about_tutor', 'job_about', 'job_location', 'job_lang', 'job_subjects', 'publish', 'tutor')
@@ -59,11 +67,6 @@ class JobSerializer(serializers.ModelSerializer):
         return instance
 
 
-class TutorUserSerializer(serializers.ModelSerializer):
-    reviews = ReviewsSerializer(many = True)
-    class Meta:
-        model = User
-        fields = ['profile', 'first_name', 'last_name', 'email', 'hourly_rate', 'response_time', 't_to_number_of_students', 'reviews']
 
 
 

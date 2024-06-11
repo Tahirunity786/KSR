@@ -127,19 +127,30 @@ class SearchJobs(APIView):
             data_a = request.GET.get("subject", "")
             data_b = request.GET.get("location", "")
 
-            jobs = Job.objects.filter(
-                Q(job_title__icontains=data_a) &
-                Q(job_subjects__name__icontains=data_a) &
-                Q(job_location__icontains=data_b)
-            ).distinct()
+            # Debugging: Check the input values
+            # logger.debug(f"Subject: {data_a}, Location: {data_b}")
+
+            # Refined filter logic
+            filters = Q()
+            if data_a:
+                filters &= (Q(job_title__icontains=data_a) | Q(job_subjects__name__icontains=data_a))
+            if data_b:
+                filters &= Q(job_location__icontains=data_b)
+
+            jobs = Job.objects.filter(filters).distinct()
+
+            # Debugging: Log the generated SQL query
+            # logger.debug(f"SQL Query: {str(jobs.query)}")
+            # logger.debug(f"Jobs found: {jobs.count()}")
 
             serializers = JobSerializer(instance=jobs, many=True)
             
             return Response(data=serializers.data, status=status.HTTP_200_OK)
 
         except Exception as e:
+            # logger.error(f"Error: {str(e)}")
             return Response({"Success": False, "Info": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+    
 class GetJobDetail(APIView):
     permission_classes = [IsAuthenticated]
 
