@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import Response
 from rest_framework import status
 
-from core_accounts.serializers import CreateUserSerializer
+from core_accounts.serializers import CreateUserSerializer, UpdateUserProfileSerializer, ShowUserProfileSerializer
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
@@ -40,14 +40,13 @@ class Register(APIView):
             current_user = user_serializer.save()
             current_user.user_type = user_type
             current_user.save()
-            return Response({"Success": True, "Info": "You can start using our services by login."}, status=status.HTTP_201_CREATED)
+            return Response({"Success": True,'class':user_type, "Info": "You can start using our services by login."}, status=status.HTTP_201_CREATED)
         else:
             return Response({"Success": False, "Error": user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserLogin(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [UserRenderer]
-
 
     def post(self, request):
         email = request.data.get("email")
@@ -69,22 +68,23 @@ class UserLogin(APIView):
         if authenticated_user.is_blocked:
             return Response({"error": "Account banned"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if all required profile fields are filled
+        required_fields = ["date_of_birth", "gender", "mobile_number", "hourly_rate", "experience"]
+        complete_profile = all(getattr(authenticated_user, field) for field in required_fields)
+
         profile_url = settings.BACKEND + authenticated_user.profile.url if authenticated_user.profile else None
         token = get_tokens_for_user(authenticated_user)
-
-       
 
         user_data = {
             "user_id": authenticated_user.id,
             "username": authenticated_user.username,
-           
-            "profile": profile_url,
-            
+            "class": authenticated_user.user_type,
+            "profile_pic": profile_url,
             "token": token,
+            "complete_profile_status": complete_profile
         }
 
         return Response({"message": "Logged in", "user": user_data}, status=status.HTTP_202_ACCEPTED)
-
 
 class GoogleAuthAPIView(APIView):
     permission_classes = [AllowAny]
@@ -164,3 +164,36 @@ class GoogleAuthAPIView(APIView):
         except ValueError as e:
             # Invalid token
             return Response({"error": f"Invalid token: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateUserProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+        serializer = UpdateUserProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"Success": True, "Info": "Profile updated successfully."}, status=status.HTTP_200_OK)
+        return Response({"Success": False, "Error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteUserProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({"Success": True, "Info": "User profile deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+class ShowProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id = id)
+        except User.DoesNotExist:
+            return Response({"Success": False, 'Info':"User not exit"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Sanitization
+        saniyized_user = ShowUserProfileSerializer(instance=user)
+
+        return Response(saniyized_user.data, status=status.HTTP_200_OK)

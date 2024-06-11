@@ -58,10 +58,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     response_time = models.CharField(max_length=50, db_index=True, default=None, null=True)
     t_to_number_of_students = models.CharField(max_length=50, db_index=True, default=None, null=True)
     experience = models.TextField(default=None, null=True)
+    degree = models.FileField(upload_to='degrees', db_index=True, null=True, default=None)
 
     # Tutee
     info = models.TextField(default=None, null=True)
-    degree = models.FileField(upload_to='degrees', db_index=True, null=True, default=None)
 
     # Global Identity
     reviews = models.ManyToManyField('Reviews', db_index=True)

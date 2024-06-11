@@ -45,3 +45,61 @@ class CreateUserSerializer(serializers.ModelSerializer):
         username = self.generate_random_username(prefix="CM", length=8)
         user = User.objects.create_user(email=email, username=username, **validated_data)
         return user
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile', 'first_name', 'last_name', 'email', 'date_of_birth', 'gender', 'mobile_number', 'hourly_rate', 'experience', 'info', 'degree']
+        extra_kwargs = {
+            'hourly_rate': {'required': False},
+            'experience': {'required': False},
+            'info': {'required': False},
+            'degree': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+            'email': {'required': False},
+        }
+
+    def update(self, instance, validated_data):
+        user_type = instance.user_type
+        if user_type == 'tutee':
+            validated_data.pop('hourly_rate', None)
+            validated_data.pop('experience', None)
+            validated_data.pop('degree', None)
+        elif user_type == 'tutor':
+            validated_data.pop('info', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+class ShowUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id',
+            'profile', 'profile_slug', 'first_name', 'last_name', 'email', 
+            'date_of_birth', 'gender', 'mobile_number', 'user_type', 
+            'hourly_rate', 'response_time', 't_to_number_of_students', 
+            'experience', 'degree', 'info'
+        )
+        extra_kwargs = {
+            'hourly_rate': {'required': False},
+            'response_time': {'required': False},
+            't_to_number_of_students': {'required': False},
+            'experience': {'required': False},
+            'degree': {'required': False},
+            'info': {'required': False}
+        }
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.user_type == 'tutee':
+            representation.pop('hourly_rate', None)
+            representation.pop('response_time', None)
+            representation.pop('t_to_number_of_students', None)
+            representation.pop('experience', None)
+            representation.pop('degree', None)
+        elif instance.user_type == 'tutor':
+            representation.pop('info', None)
+        return representation
